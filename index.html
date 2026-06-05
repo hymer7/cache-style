@@ -10,10 +10,10 @@
     <main class="page">
       <header class="hero">
         <div>
-          <p class="eyebrow">计算机组成原理互动教学演示器</p>
+          <p class="eyebrow">计算机组成原理可视化工具</p>
           <h1>主存与 Cache 地址映射动态演示</h1>
           <p class="subtitle">直接映射 / 全相联映射 / 组相联映射</p>
-          <p class="intro">通过动画理解主存块如何进入 Cache，以及 CPU 如何用地址字段快速判断 Hit 或 Miss。</p>
+          <p class="intro">先看“这个主存块能放哪”，再看“CPU 如何比较 Tag 判断命中”。</p>
         </div>
         <div class="param-card" aria-label="默认参数">
           <span>主存块 B0 ~ B15</span>
@@ -55,6 +55,14 @@
           <div class="formula-card">
             <span>当前映射公式</span>
             <strong id="formulaText">Cache 行号 = 主存块号 mod 8</strong>
+          </div>
+
+          <div class="placement-card">
+            <div>
+              <span>本次可放位置</span>
+              <strong id="placementTitle">行 0</strong>
+            </div>
+            <div id="placementMap" class="placement-map"></div>
           </div>
 
           <div class="judge-lane">
@@ -103,76 +111,12 @@
         </div>
       </section>
 
-      <section class="knowledge-grid">
-        <article class="panel">
-          <h2>当前方式原理</h2>
-          <p id="principleText"></p>
-          <div id="featureTags" class="tag-list"></div>
-        </article>
-        <article class="panel chant-card">
-          <h2>考试记忆口诀</h2>
-          <p>直接映射定一行，<br />全相联映射任意放，<br />组相联先定组，<br />组内再随便放。</p>
-          <p class="small-note">地址格式：直接映射 Tag + 行号 + 块内地址；全相联 Tag + 块内地址；组相联 Tag + 组号 + 块内地址。</p>
-        </article>
-      </section>
-
-      <section class="panel table-panel">
-        <h2>三种地址映射方式对比</h2>
-        <div class="table-wrap">
-          <table>
-            <thead>
-              <tr>
-                <th>映射方式</th>
-                <th>主存块能放哪里</th>
-                <th>地址格式</th>
-                <th>查找方式</th>
-                <th>替换范围</th>
-                <th>优点</th>
-                <th>缺点</th>
-              </tr>
-            </thead>
-            <tbody>
-              <tr>
-                <td>直接映射</td>
-                <td>只能放到唯一 Cache 行</td>
-                <td>Tag + Index + Offset</td>
-                <td>Index 定位一行，然后比较 Tag</td>
-                <td>固定行</td>
-                <td>简单、速度快、成本低</td>
-                <td>冲突多</td>
-              </tr>
-              <tr>
-                <td>全相联映射</td>
-                <td>Cache 任意一行</td>
-                <td>Tag + Offset</td>
-                <td>所有行同时比较 Tag</td>
-                <td>整个 Cache</td>
-                <td>灵活、冲突少</td>
-                <td>硬件复杂、成本高</td>
-              </tr>
-              <tr>
-                <td>组相联映射</td>
-                <td>固定组内任意一行</td>
-                <td>Tag + Set Index + Offset</td>
-                <td>Set Index 定位组，组内比较 Tag</td>
-                <td>对应组内部</td>
-                <td>冲突较少、成本适中、实际常用</td>
-                <td>控制逻辑比直接映射复杂</td>
-              </tr>
-            </tbody>
-          </table>
-        </div>
-      </section>
-
-      <section class="panel mistake-panel">
-        <h2>考试易错点</h2>
-        <div class="mistake-grid">
-          <div>直接映射取模的是 Cache 行数，不是主存块数。</div>
-          <div>组相联取模的是 Cache 组数，不是 Cache 行数。</div>
-          <div>几路组相联中的“几路”，表示每组有几行。</div>
-          <div>全相联没有行号字段。</div>
-          <div>Tag 不是用来定位的，而是用来判断 Cache 中是不是目标块。</div>
-          <div>Offset 只负责定位块内具体位置。</div>
+      <section class="panel concept-panel">
+        <h2>核心差异</h2>
+        <div class="concept-grid">
+          <div><strong>直接映射</strong><span>Index 只指向 1 行，比较 1 个 Tag。</span></div>
+          <div><strong>全相联映射</strong><span>没有 Index，所有行同时比较 Tag。</span></div>
+          <div><strong>组相联映射</strong><span>Set Index 先选 1 组，再比较组内多路 Tag。</span></div>
         </div>
       </section>
     </main>

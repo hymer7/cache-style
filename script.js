@@ -65,6 +65,8 @@ const els = {
   addressStrip: document.querySelector("#addressStrip"),
   addressNumber: document.querySelector("#addressNumber"),
   formulaText: document.querySelector("#formulaText"),
+  placementTitle: document.querySelector("#placementTitle"),
+  placementMap: document.querySelector("#placementMap"),
   cpuTag: document.querySelector("#cpuTag"),
   compareLines: document.querySelector("#compareLines"),
   judgeBadge: document.querySelector("#judgeBadge"),
@@ -84,8 +86,6 @@ const els = {
   hitCount: document.querySelector("#hitCount"),
   missCount: document.querySelector("#missCount"),
   hitRate: document.querySelector("#hitRate"),
-  principleText: document.querySelector("#principleText"),
-  featureTags: document.querySelector("#featureTags")
 };
 
 function createStats() {
@@ -590,12 +590,57 @@ function renderStats() {
   els.hitRate.textContent = `${rate}%`;
 }
 
+function placementInfo() {
+  const access = state.current || buildAccessPlan(state.mode, state.selectedBlock);
+  if (state.mode === "direct") {
+    return {
+      title: `只能放入行 ${access.targetLine}`,
+      chips: Array.from({ length: CACHE_LINES }, (_, index) => ({
+        label: `行 ${index}`,
+        possible: index === access.targetLine,
+        target: index === access.targetLine
+      }))
+    };
+  }
+  if (state.mode === "fully") {
+    return {
+      title: "8 行都可以放",
+      chips: Array.from({ length: CACHE_LINES }, (_, index) => ({
+        label: `行 ${index}`,
+        possible: true,
+        target: index === access.targetLine
+      }))
+    };
+  }
+  return {
+    title: `先定组 ${access.targetSet}，组内 2 路可放`,
+    chips: Array.from({ length: SETS }, (_, setIndex) => ({
+      label: `组 ${setIndex}`,
+      possible: setIndex === access.targetSet,
+      target: setIndex === access.targetSet,
+      group: true
+    }))
+  };
+}
+
+function renderPlacement() {
+  const info = placementInfo();
+  els.placementTitle.textContent = info.title;
+  els.placementMap.innerHTML = info.chips
+    .map((chip) => {
+      const classes = ["place-chip"];
+      if (chip.possible) classes.push("possible");
+      if (chip.target && state.step >= 2) classes.push("target");
+      if (chip.group) classes.push("group-chip");
+      return `<div class="${classes.join(" ")}">${chip.label}</div>`;
+    })
+    .join("");
+}
+
 function renderKnowledge() {
   const info = modeInfo[state.mode];
   els.modeTitle.textContent = info.title;
   els.modeSummary.textContent = info.summary;
-  els.principleText.textContent = info.principle;
-  els.featureTags.innerHTML = info.features.map((item) => `<span>${item}</span>`).join("");
   els.formulaText.textContent = formulaForCurrent();
 }
 
@@ -614,6 +659,7 @@ function render() {
   renderKnowledge();
   renderMemory();
   renderAddress();
+  renderPlacement();
   renderCache();
   renderCompareLines();
   renderJudgeBadge();
