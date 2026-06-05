@@ -1,0 +1,182 @@
+<!doctype html>
+<html lang="zh-CN">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>主存与 Cache 地址映射动态演示</title>
+    <link rel="stylesheet" href="style.css" />
+  </head>
+  <body>
+    <main class="page">
+      <header class="hero">
+        <div>
+          <p class="eyebrow">计算机组成原理互动教学演示器</p>
+          <h1>主存与 Cache 地址映射动态演示</h1>
+          <p class="subtitle">直接映射 / 全相联映射 / 组相联映射</p>
+          <p class="intro">通过动画理解主存块如何进入 Cache，以及 CPU 如何用地址字段快速判断 Hit 或 Miss。</p>
+        </div>
+        <div class="param-card" aria-label="默认参数">
+          <span>主存块 B0 ~ B15</span>
+          <span>Cache 共 8 行</span>
+          <span>块大小 16B，Offset = 4 bit</span>
+          <span>2 路组相联：4 组 x 2 行</span>
+        </div>
+      </header>
+
+      <section class="mode-card" aria-label="映射方式切换">
+        <div class="mode-tabs" role="tablist">
+          <button class="mode-tab active" data-mode="direct" type="button">直接映射</button>
+          <button class="mode-tab" data-mode="fully" type="button">全相联映射</button>
+          <button class="mode-tab" data-mode="set" type="button">组相联映射</button>
+        </div>
+        <div class="mode-summary">
+          <strong id="modeTitle">直接映射 Direct Mapping</strong>
+          <span id="modeSummary">主存块只能放入唯一 Cache 行，查找快但冲突多。</span>
+        </div>
+      </section>
+
+      <section class="demo-grid" aria-label="主演示区">
+        <section class="panel memory-panel">
+          <div class="panel-head">
+            <h2>主存 Memory</h2>
+            <span>按块与 Cache 交换数据</span>
+          </div>
+          <div id="memoryBlocks" class="memory-grid"></div>
+        </section>
+
+        <section class="panel cpu-panel">
+          <div class="panel-head">
+            <h2>CPU 地址解析</h2>
+            <span id="addressNumber">当前地址：B0，块内偏移 0</span>
+          </div>
+
+          <div class="address-strip" id="addressStrip"></div>
+
+          <div class="formula-card">
+            <span>当前映射公式</span>
+            <strong id="formulaText">Cache 行号 = 主存块号 mod 8</strong>
+          </div>
+
+          <div class="judge-lane">
+            <div id="movingToken" class="moving-token">B0</div>
+            <div class="cpu-chip">
+              <span>CPU Tag</span>
+              <strong id="cpuTag">0</strong>
+            </div>
+            <div id="compareLines" class="compare-lines"></div>
+            <div id="judgeBadge" class="judge-badge idle">等待开始</div>
+          </div>
+
+          <div class="step-card">
+            <div class="step-index" id="stepIndex">步骤 0 / 4</div>
+            <p id="stepText">选择主存块后点击“下一步”，观察 CPU 如何完成地址映射与命中判断。</p>
+          </div>
+        </section>
+
+        <section class="panel cache-panel">
+          <div class="panel-head">
+            <h2 id="cacheTitle">Cache 行状态</h2>
+            <span>Valid + Tag + Data</span>
+          </div>
+          <div id="cacheGrid" class="cache-grid"></div>
+        </section>
+      </section>
+
+      <section class="control-panel" aria-label="操作区">
+        <div class="manual-control">
+          <label for="blockInput">访问主存块号</label>
+          <input id="blockInput" type="number" min="0" max="15" value="0" />
+          <button id="visitBtn" type="button">访问</button>
+          <button id="randomBtn" type="button">随机访问</button>
+        </div>
+        <div class="step-control">
+          <button id="prevBtn" type="button" class="secondary">上一步</button>
+          <button id="nextBtn" type="button">下一步</button>
+          <button id="autoBtn" type="button">自动播放</button>
+          <button id="resetBtn" type="button" class="danger">重置</button>
+        </div>
+        <div class="stats-grid" aria-label="命中统计">
+          <div><span>访问次数</span><strong id="accessCount">0</strong></div>
+          <div><span>命中次数</span><strong id="hitCount">0</strong></div>
+          <div><span>未命中次数</span><strong id="missCount">0</strong></div>
+          <div><span>命中率</span><strong id="hitRate">0%</strong></div>
+        </div>
+      </section>
+
+      <section class="knowledge-grid">
+        <article class="panel">
+          <h2>当前方式原理</h2>
+          <p id="principleText"></p>
+          <div id="featureTags" class="tag-list"></div>
+        </article>
+        <article class="panel chant-card">
+          <h2>考试记忆口诀</h2>
+          <p>直接映射定一行，<br />全相联映射任意放，<br />组相联先定组，<br />组内再随便放。</p>
+          <p class="small-note">地址格式：直接映射 Tag + 行号 + 块内地址；全相联 Tag + 块内地址；组相联 Tag + 组号 + 块内地址。</p>
+        </article>
+      </section>
+
+      <section class="panel table-panel">
+        <h2>三种地址映射方式对比</h2>
+        <div class="table-wrap">
+          <table>
+            <thead>
+              <tr>
+                <th>映射方式</th>
+                <th>主存块能放哪里</th>
+                <th>地址格式</th>
+                <th>查找方式</th>
+                <th>替换范围</th>
+                <th>优点</th>
+                <th>缺点</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr>
+                <td>直接映射</td>
+                <td>只能放到唯一 Cache 行</td>
+                <td>Tag + Index + Offset</td>
+                <td>Index 定位一行，然后比较 Tag</td>
+                <td>固定行</td>
+                <td>简单、速度快、成本低</td>
+                <td>冲突多</td>
+              </tr>
+              <tr>
+                <td>全相联映射</td>
+                <td>Cache 任意一行</td>
+                <td>Tag + Offset</td>
+                <td>所有行同时比较 Tag</td>
+                <td>整个 Cache</td>
+                <td>灵活、冲突少</td>
+                <td>硬件复杂、成本高</td>
+              </tr>
+              <tr>
+                <td>组相联映射</td>
+                <td>固定组内任意一行</td>
+                <td>Tag + Set Index + Offset</td>
+                <td>Set Index 定位组，组内比较 Tag</td>
+                <td>对应组内部</td>
+                <td>冲突较少、成本适中、实际常用</td>
+                <td>控制逻辑比直接映射复杂</td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+      </section>
+
+      <section class="panel mistake-panel">
+        <h2>考试易错点</h2>
+        <div class="mistake-grid">
+          <div>直接映射取模的是 Cache 行数，不是主存块数。</div>
+          <div>组相联取模的是 Cache 组数，不是 Cache 行数。</div>
+          <div>几路组相联中的“几路”，表示每组有几行。</div>
+          <div>全相联没有行号字段。</div>
+          <div>Tag 不是用来定位的，而是用来判断 Cache 中是不是目标块。</div>
+          <div>Offset 只负责定位块内具体位置。</div>
+        </div>
+      </section>
+    </main>
+
+    <script src="script.js"></script>
+  </body>
+</html>
